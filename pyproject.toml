@@ -1,6 +1,6 @@
 [project]
 name = "cml2-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Thin MCP server for Cisco CML2: openapi.json + generic authenticated REST."
 readme = "README.md"
 requires-python = ">=3.10"
