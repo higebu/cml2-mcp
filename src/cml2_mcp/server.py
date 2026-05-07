@@ -12,6 +12,7 @@ token and a single transparent retry on 401.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import time
@@ -29,10 +30,8 @@ OPENAPI_TTL_SECONDS = 24 * 3600
 def _cache_dir() -> Path:
     d = Path(os.environ.get("CML_CACHE_DIR") or (Path.home() / ".cache" / "cml"))
     d.mkdir(parents=True, exist_ok=True)
-    try:
+    with contextlib.suppress(OSError):
         os.chmod(d, 0o700)
-    except OSError:
-        pass
     return d
 
 
@@ -41,9 +40,7 @@ def _require_env() -> tuple[str, str, str]:
     user = os.environ.get("CML_USERNAME")
     pw = os.environ.get("CML_PASSWORD")
     missing = [
-        k
-        for k, v in (("CML_URL", url), ("CML_USERNAME", user), ("CML_PASSWORD", pw))
-        if not v
+        k for k, v in (("CML_URL", url), ("CML_USERNAME", user), ("CML_PASSWORD", pw)) if not v
     ]
     if missing:
         raise RuntimeError(f"missing required env: {', '.join(missing)}")
@@ -84,10 +81,8 @@ def _login() -> str:
         raise RuntimeError("empty token from /authenticate")
     tp = _token_path()
     tp.write_text(token)
-    try:
+    with contextlib.suppress(OSError):
         os.chmod(tp, 0o600)
-    except OSError:
-        pass
     return token
 
 
@@ -156,9 +151,7 @@ def cml_api(method: str, path: str, body: Any = None) -> str:
 
     if 200 <= resp.status_code < 300:
         return resp.text
-    raise RuntimeError(
-        f"HTTP {resp.status_code} on {method_u} {path}: {resp.text[:500]}"
-    )
+    raise RuntimeError(f"HTTP {resp.status_code} on {method_u} {path}: {resp.text[:500]}")
 
 
 @mcp.resource("cml://openapi.json")
